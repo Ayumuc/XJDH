@@ -1,0 +1,12 @@
+../Core/Src/Air820.c:33:5:Air820_init	8	static
+../Core/Src/Air820.c:81:5:Mode_mqtt	4200	static
+../Core/Src/Air820.c:165:5:Mode_http	120	static
+../Core/Src/Air820.c:190:5:Air820_uart_send	24	static
+../Core/Src/Air820.c:216:9:Air_820ug_rxdecode	8	static
+../Core/Src/Air820.c:230:5:Data_Update	4200	static
+../Core/Src/Air820.c:279:6:board_init	4	static
+../Core/Src/Air820.c:304:7:extract_json_data	32	static
+../Core/Src/Air820.c:323:6:parse_json_and_update	32	static
+../Core/Src/Air820.c:346:6:parse_cmd_args	56	static
+../Core/Src/Air820.c:380:6:print_pid_and_waypoints	784	static
+../Core/Src/Air820.c:399:6:decode_4G	96	static

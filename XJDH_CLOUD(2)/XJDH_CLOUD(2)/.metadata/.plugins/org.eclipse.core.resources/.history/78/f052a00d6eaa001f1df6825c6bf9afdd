@@ -1,0 +1,601 @@
+#include "Data_Handle.h"
+#include "modbus.h"
+#include "usart.h"
+#include "board_config.h"
+#include "string.h"
+#include "stdlib.h"
+#include "City.h"
+#include "tim.h"
+
+#define SUNSLAVEADDR 0x01
+#define LENGHT 8
+#define READ_HOLDING_REGISTERS 0x03
+
+
+uint16_t SunDataCollect(void){
+	if(himt2_end_flag == 1){
+		//读控制器系统电压和系统电流
+		ReadVolandCurrent();
+		//读取蓄电池参数
+		ReadBatteryParam();
+		//读取故障信息
+		ReadFaultData();
+		//读取太阳能总充电放电
+		ReadTotalChargeAndDischargeAh();
+		//读取控制器累计发电量和累计放电量
+		ReadTotalGeneratedAndDischargedEnergy();
+		//读取设置参数
+		ReadSettingParam();
+		/*读取市电数据*/
+		ReadADC1_IN11();
+		//重置定时器
+		himt2_end_flag = 0;
+	}
+	return 1;
+}
+
+uint16_t ModbusDataUpdate(void){
+	if(usart_end_flag == 1){
+		uint8_t funcCode = Modbus_RecvBuf[1];
+		uint16_t regAddr = (Modbus_RecvBuf[2] << 8) | Modbus_RecvBuf[3];
+		uint16_t regCount = (Modbus_RecvBuf[4] << 8) | Modbus_RecvBuf[5];
+		char txBuffer[40] = {0};
+		if (Modbus_RecvBuf[0] == 0x01 && funcCode == 0x03) // 读取保持寄存器
+		{
+			if (regCount == 1) // 读取单个寄存器
+			{
+				// 根据regAddr读取对应的寄存器值
+				int regValue = GetValue(regAddr);
+				// 构建响应
+				txBuffer[0] = Modbus_RecvBuf[0]; // 地址
+				txBuffer[1] = 0x03; // 功能码
+				txBuffer[2] = 0x02; // 字节数
+				txBuffer[3] = regValue >> 8; // 高位
+				txBuffer[4] = regValue & 0xFF; // 低位
+				// 添加CRC校验码
+				uint16_t crc = ModbusCRC16(txBuffer, 5);
+				txBuffer[6] = (crc >> 8) & 0xFF;
+				txBuffer[5] = crc & 0xFF;
+				// 发送响应
+				HAL_UART_Transmit(&huart3, txBuffer, 7, HAL_MAX_DELAY);
+			}
+			else // 读取寄存器
+			{
+				uint16_t data[regCount]; // 用于存储16个寄存器的数据
+				for (int i = 0; i < regCount; i++) {
+					data[i] = GetValue(i + regAddr); // 假设从0x01开始读取16个连续寄存器
+				}
+				// 构建响应
+				txBuffer[0] = Modbus_RecvBuf[0]; // 地址
+				txBuffer[1] = 0x03; // 功能码
+				txBuffer[2] = regCount*2; // 16个寄存器共32字节数据
+				for (int i = 0; i < regCount; i++) {
+					txBuffer[3 + i * 2] = data[i] >> 8; // 高位
+					txBuffer[4 + i * 2] = data[i] & 0xFF; // 低位
+				}
+				// 添加CRC校验码
+				 uint16_t crc = ModbusCRC16(txBuffer, 3 + regCount * 2);
+				txBuffer[4 + regCount * 2] = (crc >> 8) & 0xFF;
+				txBuffer[3 + regCount * 2] = crc & 0xFF;
+				// 发送响应
+				HAL_UART_Transmit(&huart3, txBuffer, 5 + regCount * 2, HAL_MAX_DELAY);
+			}
+		}
+		else if(funcCode == 0x06){
+			if (regCount == 1){// 修改单个寄存器
+				uint16_t regValue = (Modbus_RecvBuf[5]<<8)|Modbus_RecvBuf[6];
+				SetValue(regAddr, regValue);
+				HAL_UART_Transmit(&huart3, Modbus_RecvBuf, 8, HAL_MAX_DELAY);
+			}
+		}
+
+		memset(Modbus_RecvBuf,0,sizeof(Modbus_RecvBuf));
+
+		// 准备接收下一个命令
+		HAL_UART_Receive_DMA(&huart3,Modbus_RecvBuf,sizeof(Modbus_RecvBuf));
+		usart_end_flag = 0;
+	}
+	return 1;
+}
+
+
+uint16_t ReadVolandCurrent(void){
+	SendModbusRequest(&huart4,SUNSLAVEADDR,VOAANDCURADDR,LENGHT);
+	return 1;
+}
+
+uint16_t ReadBatterySoc(void){
+	SendModbusRequest(&huart4,SUNSLAVEADDR,BATTERYSOC,LENGHT);
+	return 1;
+}
+
+uint16_t ReadBatteryVol(void){
+	SendModbusRequest(&huart4,SUNSLAVEADDR,BATTERYVOL,LENGHT);
+	return 1;
+}
+
+uint16_t ReadTemperature(void){
+	SendModbusRequest(&huart4,SUNSLAVEADDR,BATTERYVOL,LENGHT);
+	return 1;
+}
+
+uint16_t ReadBatteryParam(void){
+	uint16_t registers[10]; // 10个寄存器
+	uint16_t startAddress = 0x0100; // 起始地址
+	uint16_t quantity = 10; // 读取的寄存器数量
+
+	Sun_RcFlag = BATTERYFLAG;
+
+	ReadMultipleHoldingRegisters(SUNSLAVEADDR, startAddress, quantity, registers, &huart4);
+
+	g_systemParameters.soc = registers[0];
+	g_systemParameters.batteryVoltage = registers[1] * 0.1;
+	g_systemParameters.batteryChargeCurr = registers[2] * 0.01; // 新增：读取充电电流
+	g_systemParameters.controllerTemp = (int8_t)((registers[3]>>8)&0xff);
+	g_systemParameters.batteryTemp = (int8_t)(registers[3]&0xff);
+	g_systemParameters.loadVoltage = registers[4] * 0.1;
+	g_systemParameters.loadCurrent = registers[5] * 0.01;
+	g_systemParameters.loadPower = registers[6];
+	g_systemParameters.solarVoltage = registers[7] * 0.1;
+	g_systemParameters.solarCurrent = registers[8] * 0.01;
+	g_systemParameters.solarPower = registers[9];
+
+	printf("\r\n");
+	printf("Battery SOC: %d%\r\n", g_systemParameters.soc);
+	printf("Battery Voltage: %.1f V\r\n", g_systemParameters.batteryVoltage);
+	printf("Battery Charge Current: %.2f A\r\n", g_systemParameters.batteryChargeCurr); // 新增：打印充电电流
+	printf("Battery Temperature: %d\r\n", g_systemParameters.batteryTemp);
+	printf("Controller Temperature: %d\r\n", g_systemParameters.controllerTemp);
+	printf("Load Voltage: %.1f V\r\n", g_systemParameters.loadVoltage);
+	printf("Load Current: %.2f A\r\n", g_systemParameters.loadCurrent);
+	printf("Load Power: %d W\r\n", g_systemParameters.loadPower);
+	printf("Solar Voltage: %.1f V\r\n", g_systemParameters.solarVoltage);
+	printf("Solar Current: %.2f A\r\n", g_systemParameters.solarCurrent);
+	printf("Solar Power: %d W\r\n", g_systemParameters.solarPower);
+	printf("\r\n");
+	return 1;
+}
+
+// 读取故障码数据
+void ReadFaultData(void)
+{
+    uint16_t registers[2]; // 2个寄存器
+    uint16_t startAddress = 0x0121; // 起始地址
+    uint16_t quantity = 2; // 读取的寄存器数量
+
+    Sun_RcFlag = FAULTFLAG;
+
+    ReadMultipleHoldingRegisters(SUNSLAVEADDR, startAddress, quantity, registers, &huart4);
+
+    g_systemParameters.faultHigh = registers[0];
+	g_systemParameters.faultLow = registers[1];
+	printf("\r\n");
+	printf("FaultHigh:%d\r\n",g_systemParameters.faultHigh);
+	printf("FaultLow:%d\r\n",g_systemParameters.faultLow);
+	printf("\r\n");
+	ParseFaultsAndAlarms(&g_systemParameters);
+	PrintFaultsAndAlarms(&g_systemParameters);
+
+
+}
+
+// 读取总充电安时数和总放电安时数
+void ReadTotalChargeAndDischargeAh(void)
+{
+    uint16_t registers[8]; // 4个寄存器
+    uint16_t startAddress = 0x0118; // 起始地址
+    uint16_t quantity = 8; // 读取的寄存器数量
+
+    Sun_RcFlag = PVCHARGE;
+
+    ReadMultipleHoldingRegisters(SUNSLAVEADDR, startAddress, quantity, registers, &huart4);
+	// 将原始值转换为浮点数
+	g_systemParameters.totalBatteryChargeAh = (float)(registers[0] << 16 | registers[1]) / 1000.0;
+	g_systemParameters.totalBatteryDischargeAh = (float)(registers[2] << 16 | registers[3]) / 1000.0;
+	g_systemParameters.totalSumOutputPower = (float)(registers[4] << 16 | registers[5]) / 1000.0;
+	g_systemParameters.totalSumUsePower = (float)(registers[6] << 16 | registers[7]) / 1000.0;
+	printf("\r\n");
+	printf("totalChargeAhRaw:%f\r\n",g_systemParameters.totalBatteryChargeAh);
+	printf("totalDischargeAhRaw:%f\r\n",g_systemParameters.totalBatteryDischargeAh);
+	printf("totalSumOutputPower:%f\r\n",g_systemParameters.totalSumOutputPower);
+	printf("totalSumUsePower:%f\r\n",g_systemParameters.totalSumUsePower);
+	printf("\r\n");
+}
+
+// 读取控制器累计发电量和累计放电量
+void ReadTotalGeneratedAndDischargedEnergy(void)
+{
+    uint16_t registers[4]; // 4个寄存器
+    uint16_t startAddress = 0x011C; // 起始地址
+    uint16_t quantity = 4; // 读取的寄存器数量
+
+    ReadMultipleHoldingRegisters(SUNSLAVEADDR, startAddress, quantity, registers, &huart4);
+
+    g_systemParameters.totalGeneratedEnergy = (float)(registers[0] << 16 | registers[1]) / 1000.0;
+	g_systemParameters.totalDischargedEnergy = (float)(registers[2] << 16 | registers[3]) / 1000.0;
+	printf("\r\n");
+	printf("totalGeneratedEnergy:%f\r\n",g_systemParameters.totalGeneratedEnergy);
+	printf("totalDischargedEnergy:%f\r\n",g_systemParameters.totalDischargedEnergy);
+	printf("\r\n");
+}
+
+void ReadSettingParam(void){
+	uint16_t registers[9]; // 4个寄存器
+	uint16_t startAddress = 0xE007; // 起始地址
+	uint16_t quantity = 9; // 读取的寄存器数量
+
+	ReadMultipleHoldingRegisters(SUNSLAVEADDR, startAddress, quantity, registers, &huart4);
+
+	// 解析数据并填充到结构体中
+	g_systemParameters.balanceChargingVoltage = registers[0];
+	g_systemParameters.boostChargingVoltage = registers[1];
+	g_systemParameters.floatChargingVoltage = registers[2];
+	g_systemParameters.boostReturnVoltage = registers[3];
+	g_systemParameters.dischargeReturnVoltage = registers[4];
+	g_systemParameters.undervoltageVoltage = registers[5];
+	g_systemParameters.dischargeVoltage = registers[6];
+	g_systemParameters.dischargeLimitVoltage = registers[7];
+
+	// 处理 E00FH 寄存器
+	g_systemParameters.chargeDischargeCutoffCapacity100 = (registers[8] & 0xFF00) >> 8;
+	g_systemParameters.chargeDischargeCutoffCapacity50 = registers[8] & 0x00FF;
+
+	// 打印读取的参数
+	printf("Balance Charging Voltage: %.1fV\r\n", g_systemParameters.balanceChargingVoltage * 0.1);
+	printf("Boost Charging Voltage: %.1fV\r\n", g_systemParameters.boostChargingVoltage * 0.1);
+	printf("Float Charging Voltage: %.1fV\r\n", g_systemParameters.floatChargingVoltage * 0.1);
+	printf("Boost Return Voltage: %.1fV\r\n", g_systemParameters.boostReturnVoltage * 0.1);
+	printf("Discharge Return Voltage: %.1fV\r\n", g_systemParameters.dischargeReturnVoltage * 0.1);
+	printf("Undervoltage Voltage: %.1fV\\rn", g_systemParameters.undervoltageVoltage * 0.1);
+	printf("Discharge Voltage: %.1fV\r\n", g_systemParameters.dischargeVoltage * 0.1);
+	printf("Discharge Limit Voltage: %.1fV\r\n", g_systemParameters.dischargeLimitVoltage * 0.1);
+	printf("Charge/Discharge Cutoff Capacity 100%%: %u%%\r\n", g_systemParameters.chargeDischargeCutoffCapacity100);
+	printf("Charge/Discharge Cutoff Capacity 50%%: %u%%\r\n", g_systemParameters.chargeDischargeCutoffCapacity50);
+
+}
+
+// 解析故障和警告信息
+void ParseFaultsAndAlarms(SystemParameters *params)
+{
+    uint16_t faultHigh = params->faultHigh;
+    uint16_t faultLow = params->faultLow;
+
+    // 故障告警信息高16位
+    params->loadOpenCircuit = (faultHigh & (1 << 31)) != 0;
+    params->probeDamage = (faultHigh & (1 << 30)) != 0;
+    params->batteryReverse = (faultHigh & (1 << 28)) != 0;
+    params->lowTempChargeProtection = (faultHigh & (1 << 27)) != 0;
+    params->overchargeProtection = (faultHigh & (1 << 26)) != 0;
+    params->lowTempDischargeProtection = (faultHigh & (1 << 25)) != 0;
+    params->highTempDischargeProtection = (faultHigh & (1 << 24)) != 0;
+    params->noBatteryDetected = (faultHigh & (1 << 23)) != 0;
+    params->supplyStatus = (faultHigh & (1 << 22)) != 0;
+
+    // 故障告警信息低16位
+    params->solarReverse = (faultLow & (1 << 12)) != 0;
+    params->solarOvervoltage = (faultLow & (1 << 11)) != 0;
+    params->pvInputOvervoltage = (faultLow & (1 << 9)) != 0;
+    params->pvInputPowerExcess = (faultLow & (1 << 7)) != 0;
+    params->highTempChargeProtection = (faultLow & (1 << 6)) != 0;
+    params->controllerOvertemp = (faultLow & (1 << 5)) != 0;
+    params->loadOverpowerOrOvercurrent = (faultLow & (1 << 4)) != 0;
+    params->loadShortCircuit = (faultLow & (1 << 3)) != 0;
+    params->undervoltageWarning = (faultLow & (1 << 2)) != 0;
+    params->batteryOvervoltage = (faultLow & (1 << 1)) != 0;
+    params->batteryDeepDischarge = (faultLow & (1 << 0)) != 0;
+}
+
+// 打印故障和警告信息
+void PrintFaultsAndAlarms(SystemParameters *params)
+{
+	printf("\r\n");
+    printf("Fault and Alarm Information:\n");
+    printf("Load Open Circuit: %s\n", params->loadOpenCircuit ? "Yes" : "No");
+    printf("Probe Damage: %s\n", params->probeDamage ? "Yes" : "No");
+    printf("Battery Reverse: %s\n", params->batteryReverse ? "Yes" : "No");
+    printf("Low Temp Charge Protection: %s\n", params->lowTempChargeProtection ? "Yes" : "No");
+    printf("Overcharge Protection: %s\n", params->overchargeProtection ? "Yes" : "No");
+    printf("Low Temp Discharge Protection: %s\n", params->lowTempDischargeProtection ? "Yes" : "No");
+    printf("High Temp Discharge Protection: %s\n", params->highTempDischargeProtection ? "Yes" : "No");
+    printf("No Battery Detected: %s\n", params->noBatteryDetected ? "Yes" : "No");
+    printf("Supply Status: %s\n", params->supplyStatus ? "City Power" : "Battery Power");
+
+    printf("Solar Reverse: %s\n", params->solarReverse ? "Yes" : "No");
+    printf("Solar Overvoltage: %s\n", params->solarOvervoltage ? "Yes" : "No");
+    printf("PV Input Overvoltage: %s\n", params->pvInputOvervoltage ? "Yes" : "No");
+    printf("PV Input Power Excess: %s\n", params->pvInputPowerExcess ? "Yes" : "No");
+    printf("High Temp Charge Protection: %s\n", params->highTempChargeProtection ? "Yes" : "No");
+    printf("Controller Overtemp: %s\n", params->controllerOvertemp ? "Yes" : "No");
+    printf("Load Overpower or Overcurrent: %s\n", params->loadOverpowerOrOvercurrent ? "Yes" : "No");
+    printf("Load Short Circuit: %s\n", params->loadShortCircuit ? "Yes" : "No");
+    printf("Undervoltage Warning: %s\n", params->undervoltageWarning ? "Yes" : "No");
+    printf("Battery Overvoltage: %s\n", params->batteryOvervoltage ? "Yes" : "No");
+    printf("Battery Deep Discharge: %s\n", params->batteryDeepDischarge ? "Yes" : "No");
+    printf("\r\n");
+}
+
+uint16_t GetValue(uint16_t regAddr){
+	uint16_t regValue = 0;
+	switch (regAddr) {
+	case 0x01:
+		//电池电压
+		regValue = (uint16_t)(g_systemParameters.batteryVoltage * 10);
+		break;
+	case 0x02:
+		regValue = (uint16_t)(g_systemParameters.solarCurrent * 10);
+		break;
+	case 0x03:
+		regValue = (uint16_t)(Cityparam.city_chargecurr * 10);
+		break;
+	case 0x04:
+		regValue = (uint16_t)(g_systemParameters.loadCurrent * 10);
+		break;
+	case 0x05:
+		regValue = (uint16_t)(g_systemParameters.solarVoltage * 10);
+		break;
+	case 0x06:
+		regValue = (uint16_t)(g_systemParameters.batteryTemp + 50);
+		break;
+	case 0x07:
+		regValue = 0;
+		if (g_systemParameters.undervoltageWarning) regValue |= (1 << 0); // 欠压
+		if (g_systemParameters.loadOverpowerOrOvercurrent || g_systemParameters.loadShortCircuit) regValue |= (1 << 1); // 过载/短路
+		if (g_systemParameters.highTempChargeProtection || g_systemParameters.highTempDischargeProtection || g_systemParameters.controllerOvertemp) regValue |= (1 << 2); // 过温
+		if (g_systemParameters.solarOvervoltage || g_systemParameters.pvInputOvervoltage) regValue |= (1 << 3); // 过压
+		break;
+	case 0x08:
+		if(g_systemParameters.systemVoltage == 12) regValue = 0x00;
+		else if(g_systemParameters.systemVoltage == 24) regValue = 0x01;
+		else if(g_systemParameters.systemVoltage == 48) regValue = 0x02;
+		break;
+	case 0x09:
+		regValue = 0x0C;
+		break;
+	case 0x0A:
+		regValue = (uint16_t)(g_systemParameters.totalGeneratedEnergy) >> 16;
+		break;
+	case 0x0B:
+		regValue = (uint16_t)(g_systemParameters.totalGeneratedEnergy) & 0xFFFF;
+		break;
+	case 0x0C:
+		regValue = (uint16_t)(g_systemParameters.totalSumOutputPower * 10000) >> 16;
+		break;
+	case 0x0D:
+		regValue = (uint16_t)(g_systemParameters.totalSumOutputPower * 10000) & 0xFFFF;
+		break;
+	case 0x0E:
+		regValue = (uint16_t)(g_systemParameters.totalSumUsePower * 1000) >> 16;
+		break;
+	case 0x0F:
+		regValue = (uint16_t)(g_systemParameters.totalSumUsePower * 1000) & 0xFFFF;
+		break;
+	case 0x10:
+		regValue = 0x00;
+		break;
+	case 0x11:
+		regValue = (uint16_t)(g_systemParameters.balanceChargingVoltage*10);
+		break;
+	case 0x12:
+		regValue = (uint16_t)(g_systemParameters.boostChargingVoltage*10);
+		break;
+	case 0x13:
+		regValue = (uint16_t)(g_systemParameters.dischargeVoltage*10);
+		break;
+	case 0x14:
+		regValue = (uint16_t)(g_systemParameters.dischargeLimitVoltage*10);
+		break;
+	case 0x15:
+		regValue = (uint16_t)(g_systemParameters.floatChargingVoltage*10);
+		break;
+	case 0x16:
+		regValue = (uint16_t)(g_systemParameters.overvoltageVoltage*10);
+		break;
+	case 0x17:
+		regValue = (uint16_t)(Cityparam.city_chargecurr * 10);
+		break;
+	case 0x18:
+		regValue = (uint16_t)(g_systemParameters.pvctrltime);
+		break;
+	case 0x19:
+		regValue = 1;
+		break;
+	case 0x1A:
+		regValue = (uint16_t)(g_systemParameters.pvofvolopenctrl);
+		break;
+	case 0x1B:
+		regValue = (uint16_t)(g_systemParameters.pvofvolopenctrl);
+		break;
+	case 0x1C:
+		regValue = 60;
+		break;
+	case 0x1D:
+		regValue = 1;
+		break;
+	default:
+		regValue = 0;
+		break;
+	}
+	return regValue;
+}
+
+uint16_t SunDataDecode(void){
+	if(usart4_end_flag == 1){
+		switch(Sun_RcFlag){
+		case VOLANDCURR:
+			g_systemParameters.systemVoltage = (Sun_RecbBuf[3] << 8) | Sun_RecbBuf[4]; // 高字节在前
+			g_systemParameters.systemCurrent = (Sun_RecbBuf[5] << 8) | Sun_RecbBuf[6]; // 低字节在后
+			printf("System Voltage: %d V\r\n", g_systemParameters.systemVoltage);
+			printf("System Current: %d A\r\n", g_systemParameters.systemCurrent);
+			break;
+		case BATTERYFLAG:
+			g_systemParameters.soc = (Sun_RecbBuf[3] << 8) | Sun_RecbBuf[4];
+			g_systemParameters.batteryVoltage = ((Sun_RecbBuf[5] << 8) | Sun_RecbBuf[6]) * 0.1;
+			g_systemParameters.batteryChargeCurr = ((Sun_RecbBuf[7] << 8) | Sun_RecbBuf[8]) * 0.01; // 新增：读取充电电流
+			g_systemParameters.controllerTemp = (int8_t)Sun_RecbBuf[9];
+			g_systemParameters.batteryTemp = (int8_t)Sun_RecbBuf[10];
+			g_systemParameters.loadVoltage = ((Sun_RecbBuf[11] << 8) | Sun_RecbBuf[12]) * 0.1;
+			g_systemParameters.loadCurrent = ((Sun_RecbBuf[13] << 8) | Sun_RecbBuf[14]) * 0.01;
+			g_systemParameters.loadPower = ((Sun_RecbBuf[15] << 8) | Sun_RecbBuf[16]);
+			g_systemParameters.solarVoltage = ((Sun_RecbBuf[17] << 8) | Sun_RecbBuf[18]) * 0.1;
+			g_systemParameters.solarCurrent = ((Sun_RecbBuf[19] << 8) | Sun_RecbBuf[20]) * 0.01;
+			g_systemParameters.solarPower = ((Sun_RecbBuf[21] << 8) | Sun_RecbBuf[22]);
+
+			printf("Battery SOC: %d%\r\n", g_systemParameters.soc);
+			printf("Battery Voltage: %.1f V\r\n", g_systemParameters.batteryVoltage);
+			printf("Battery Charge Current: %.2f A\r\n", g_systemParameters.batteryChargeCurr); // 新增：打印充电电流
+			printf("Battery Temperature: %d℃\r\n", g_systemParameters.batteryTemp);
+			printf("Controller Temperature: %d℃\r\n", g_systemParameters.controllerTemp);
+			printf("Load Voltage: %.1f V\r\n", g_systemParameters.loadVoltage);
+			printf("Load Current: %.2f A\r\n", g_systemParameters.loadCurrent);
+			printf("Load Power: %d W\r\n", g_systemParameters.loadPower);
+			printf("Solar Voltage: %.1f V\r\n", g_systemParameters.solarVoltage);
+			printf("Solar Current: %.2f A\r\n", g_systemParameters.solarCurrent);
+			printf("Solar Power: %d W\r\n", g_systemParameters.solarPower);
+			break;
+		case FAULTFLAG:
+//			g_systemParameters.faultHigh = (Sun_RecbBuf[3] << 8) | Sun_RecbBuf[4];
+//			g_systemParameters.faultLow = (Sun_RecbBuf[5] << 8) | Sun_RecbBuf[6];
+//			ParseFaultsAndAlarms(&g_systemParameters);
+//			PrintFaultsAndAlarms(&g_systemParameters);
+//			printf("FaultHigh:%d\r\n",g_systemParameters.faultHigh);
+//			printf("FaultLow:%d\r\n",g_systemParameters.faultLow);
+			break;
+		case PVCHARGE:
+//			uint32_t totalChargeAhRaw = ((uint32_t)(((Sun_RecbBuf[3] << 8) | Sun_RecbBuf[4]) << 16) | ((Sun_RecbBuf[5] << 8) | Sun_RecbBuf[6]));
+//			uint32_t totalDischargeAhRaw = ((uint32_t)(((Sun_RecbBuf[7] << 8) | Sun_RecbBuf[8]) << 16) | ((Sun_RecbBuf[9] << 8) | Sun_RecbBuf[10]));
+//			// 将原始值转换为浮点数
+//			g_systemParameters.totalChargeAh = (float)totalChargeAhRaw;
+//			g_systemParameters.totalDischargeAh = (float)totalDischargeAhRaw;
+//			printf("totalChargeAhRaw:%d\r\n",g_systemParameters.totalChargeAh);
+//			printf("totalDischargeAhRaw:%d\r\n",g_systemParameters.totalDischargeAh);
+			break;
+		case SUMFLAG:
+			// 组合寄存器值
+			uint32_t totalGeneratedEnergyRaw = ((uint32_t)(((Sun_RecbBuf[3] << 8) | Sun_RecbBuf[4]) << 16) | ((Sun_RecbBuf[5] << 8) | Sun_RecbBuf[6]));
+			uint32_t totalDischargedEnergyRaw = ((uint32_t)(((Sun_RecbBuf[7] << 8) | Sun_RecbBuf[8]) << 16) | ((Sun_RecbBuf[9] << 8) | Sun_RecbBuf[10]));
+			// 将原始值转换为浮点数
+			g_systemParameters.totalGeneratedEnergy = (float)totalGeneratedEnergyRaw / 1000.0;
+			g_systemParameters.totalDischargedEnergy = (float)totalDischargedEnergyRaw / 1000.0;
+			printf("totalGeneratedEnergy:%d\r\n",g_systemParameters.totalGeneratedEnergy);
+			printf("totalDischargedEnergy:%d\r\n",g_systemParameters.totalDischargedEnergy);
+			break;
+		default:break;
+		}
+		Sun_RcFlag = 0;
+		memset(Sun_RecbBuf,0,sizeof(Sun_RecbBuf));
+		HAL_UART_Receive_DMA(&huart4,Sun_RecbBuf,sizeof(Sun_RecbBuf));
+		usart4_end_flag = 0;
+	}
+	return 1;
+}
+
+void SetValue(uint16_t regAddr, uint16_t value) {
+	uint16_t result = 0;
+	switch(regAddr){
+	case 0x11:
+		result = 0xE007;
+		break;
+	case 0x12:
+		result = 0xE008;
+		break;
+	case 0x13:
+		result = 0xE00D;
+		break;
+	case 0x14:
+		result = 0xE00B;
+		break;
+	case 0x15:
+		result = 0xE009;
+		break;
+	case 0x16:
+		result = 0xE005;
+		break;
+	case 0x17:
+		result = 0xE007;
+		break;
+	case 0x18:
+		break;
+	case 0x19:
+		break;
+	default:break;
+	}
+	uint8_t response[8] = {0};
+	response[0] = 0x01; // 设备地址
+	response[1] = 0x06; // 功能码
+	response[2] = (result >> 8) & 0xFF; // 寄存器地址高字节
+	response[3] = result & 0xFF; // 寄存器地址低字节
+	response[4] = (value >> 8) & 0xFF; // 寄存器值高字节
+	response[5] = value & 0xFF; // 寄存器值低字节
+
+	// 计算 CRC 校验码
+	uint16_t crc = ModbusCRC16(response, 6);
+	response[6] = (crc >> 8) & 0xFF;
+	response[7] = crc & 0xFF;
+
+	// 发送响应数据包
+	HAL_UART_Transmit(&huart4, response, sizeof(response), HAL_MAX_DELAY);
+	return;
+}
+
+
+// 串口接收函数，带有超时
+HAL_StatusTypeDef UART_ReceiveWithTimeout(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout)
+{
+    HAL_TIM_Base_Start_IT(&htim3); // 启动定时器
+    HAL_StatusTypeDef status = HAL_UART_Receive(huart, pData, Size, HAL_MAX_DELAY); // 启动串口接收
+
+    uint32_t start_time = HAL_GetTick(); // 获取当前时间
+    while ((status == HAL_OK) && (HAL_UART_GetState(huart) != HAL_UART_STATE_READY) && !timeout_flag) {
+        if ((HAL_GetTick() - start_time) > Timeout) {
+            HAL_TIM_Base_Stop_IT(&htim3); // 停止定时器
+            __HAL_TIM_SET_COUNTER(&htim3, 0); // 将计数器清零
+            HAL_UART_AbortReceive(huart); // 中止接收操作
+            return HAL_TIMEOUT; // 返回超时错误
+        }
+    }
+
+    HAL_TIM_Base_Stop_IT(&htim3); // 停止定时器
+    __HAL_TIM_SET_COUNTER(&htim3, 0); // 将计数器清零
+    timeout_flag = 0; // 清除超时标志
+    return status;
+}
+
+uint16_t Check_Config_Mode(void) {
+    uint16_t config_mode = 0;
+
+    // 检查 PB8 引脚状态
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET) { // 如果 PB8 被按下
+    	while(1){
+
+    		if(usart_end_flag == 1){
+    			Config_Decode();
+    		}
+    		memset(Modbus_RecvBuf,0,sizeof(Modbus_RecvBuf));
+    		HAL_UART_Receive_DMA(&huart3,Modbus_RecvBuf,sizeof(Modbus_RecvBuf));
+    	}
+        config_mode = 1; // 进入配置模式
+    }
+
+    return config_mode;
+}
+
+
+uint16_t Config_Decode(void){
+	if(strstr(Modbus_RecvBuf,"ReadAll") != NULL){
+		char respone[1024] = {0};
+		sprintf(respone,"{\"Addr\":\"%s\",\"Port\":\"%s\",\"Id\":\"%s\",\"STopic\":\"%s\".\"PTpoic\":\"%s\"}",\
+				g_BoardConfig.MqttAddr,g_BoardConfig.MqttPort,g_BoardConfig.MqttClinetId,g_BoardConfig.MqttSubTopic,g_BoardConfig.MqttPubTopic);
+		HAL_UART_Transmit(&huart3,respone,strlen(respone),HAL_MAX_DELAY);
+	}
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+

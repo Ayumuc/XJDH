@@ -1,0 +1,3 @@
+../Core/Src/Power_Control.c:6:9:Power_Contorl_BLUE	8	static
+../Core/Src/Power_Control.c:11:9:Power_Contorl_AD	8	static
+../Core/Src/Power_Control.c:16:9:Power_Contorl_NET	4	static

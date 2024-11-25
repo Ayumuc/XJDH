@@ -1,0 +1,106 @@
+#include "main.h"
+#include "wt1_imu.h"
+#include "usart.h"
+#include "board_init.h"
+
+
+
+int imu_collect(void){
+	HAL_UART_Receive_DMA(&huart3,imu_buf,sizeof(imu_buf));
+//	printf("\r\n");
+//	for(int j = 0 ; j < sizeof(imu_buf) ; j++){
+//		printf(" %02x",imu_buf[j]);
+//	}
+//	printf("\r\n");
+	imu_decode();
+	return 1;
+}
+
+/*55 51 00 00 00 00 00 00 b6 01 5d 55 52 00 00 00 00 00 00 c9 89 f9 55 53 4e 05 36 ff 00 00 06 c1 f7*/
+
+const float alpha = 0.1f;  // 可以调整这个值以改变滤波效果
+const float threshold = 5.0f;  // 设置一个阈值来过滤突然变化的数据
+
+int imu_decode(void){
+	float data = 0.0;
+	//printf("\r\n");
+	for(int i = 0 ; i < 100; i++){
+		if(imu_buf[i] == 0x55 && imu_buf[i+1] == 0x51){
+			data = (float)(imu_buf[i+3] << 8 | imu_buf[i+2])/32768*16;
+			board_config.Imu_data.Ax = data;
+#if PRINTF
+			printf(" AX:%f",data);
+#endif
+			data = (float)(imu_buf[i+5] << 8 | imu_buf[i+4])/32768*16;
+			board_config.Imu_data.Ay = data;
+#if PRINTF
+			printf(" AY:%f",data);
+#endif
+			data = (float)(imu_buf[i+7] << 8 | imu_buf[i+6])/32768*16;
+			board_config.Imu_data.Az = data;
+#if PRINTF
+			printf(" AZ:%f",data);
+#endif
+			data = (float)(imu_buf[i+9] << 8 | imu_buf[i+8])/100;
+			board_config.Imu_data.Ay = data;
+#if PRINTF
+			printf(" T:%f",data);
+#endif
+		}
+		else if(imu_buf[i] == 0x55 && imu_buf[i+1] == 0x52){
+			data = (float)(imu_buf[i+3] << 8 | imu_buf[i+2])/32768*2000;
+			board_config.Imu_data.Wx;
+#if PRINTF
+			printf(" WX:%f",data);
+#endif
+			data = (float)(imu_buf[i+5] << 8 | imu_buf[i+4])/32768*2000;
+			board_config.Imu_data.Wy;
+#if PRINTF
+			printf(" WY:%f",data);
+#endif
+			data = (float)(imu_buf[i+7] << 8 | imu_buf[i+6])/32768*2000;
+			board_config.Imu_data.Wz;
+#if PRINTF
+			printf(" WZ:%f",data);
+#endif
+			data = (float)(imu_buf[i+9] << 8 | imu_buf[i+8])/100;
+#if PRINTF
+			printf(" V:%f",data);
+#endif
+		}
+		else if(imu_buf[i] == 0x55 && imu_buf[i+1] == 0x53){
+			data = (float)(imu_buf[i+3] << 8 | imu_buf[i+2])/32768*180;
+			board_config.Imu_data.Roll = data;
+#if PRINTF
+			printf(" ROLL:%f",data);
+#endif
+			data = (float)(imu_buf[i+5] << 8 | imu_buf[i+4])/32768*180;
+			board_config.Imu_data.Yaw = data;
+#if PRINTF
+			printf(" YAW:%f",data);
+#endif
+			if(data == 0.0){
+				return 1;
+			}
+			 if (fabs(new_yaw - filtered_yaw) < threshold) {
+			        filtered_yaw = (1.0f - alpha) * filtered_yaw + alpha * new_yaw;
+			    }
+			board_config.Imu_data.Pitch = data;
+			befor_yaw = data;
+#if PRINTF
+			printf(" PITCH:%f",data);
+#endif
+			data = (float)(imu_buf[i+9] << 8 | imu_buf[i+8]);
+#if PRINTF
+			printf(" BAN:%f",data);
+#endif
+		}
+//		else if(buf[i] == 0x55 && buf[i+1] == 0x54){
+//
+//		}
+	}
+//	printf("\r\n");
+	return 1;
+}
+
+

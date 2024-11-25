@@ -1,0 +1,10 @@
+22:08:27 **** Incremental Build of configuration Debug for project Charge_Cloud ****
+make -j16 all 
+arm-none-eabi-size  Charge_Cloud.elf 
+   text	   data	    bss	    dec	    hex	filename
+  52196	    468	  50676	 103340	  193ac	Charge_Cloud.elf
+Finished building: default.size.stdout
+ 
+
+22:08:28 Build Finished. 0 errors, 0 warnings. (took 1s.325ms)
+

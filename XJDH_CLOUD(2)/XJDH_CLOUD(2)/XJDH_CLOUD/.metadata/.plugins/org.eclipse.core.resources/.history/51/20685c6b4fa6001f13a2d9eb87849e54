@@ -1,0 +1,283 @@
+/*
+ * Data_Collect.c
+ *
+ *  Created on: Jun 27, 2024
+ *      Author: Administrator
+ */
+
+#include "Data_Collect.h"
+#include "wt1_imu.h"
+#include "main.h"
+#include "can1.h"
+#include "adc.h"
+#include "Power_Control.h"
+#include "gpio.h"
+#include "Air820.h"
+#include "board_init.h"
+#include "tim.h"
+#include "pid.h"
+
+int Data_Collect(void){
+	//通过can采集电调数据
+	//can_collect();
+	//通过串口采集陀螺仪数据
+	//imu_collect();
+	//通过adc采集电池数据
+	//adc_collect();
+	//通过rs485读取GPS数据
+	//gps_collect();
+	//读取惯导数据
+	Inertial_Navigation_Collect();
+	return 1;
+}
+
+int KEY = 0;
+int KEY_FLAG = 0;
+int KEY_COUNT = 2;
+int Key_Switch(void){
+  KEY = HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_14);
+  if(KEY == 0){
+	KEY_FLAG = 1;
+  }
+  if(KEY_FLAG == 1 && KEY == 1){
+	KEY_FLAG = 2;
+	KEY_COUNT++;
+  }
+//  printf("%d\r\n",KEY_COUNT);
+  if(KEY_COUNT%5 == 0){
+ 	  KEY_COUNT = 2;
+  }
+  if(KEY_COUNT%4 == 0){
+  	  //printf("Auto\r\n");
+   	  auto_flag = 1;
+    }
+  else if(KEY_COUNT%2 == 0){
+	  Status_get_and_Powerset(Get_KeyState());
+	  auto_flag = 0;
+	  //printf("Rocker\r\n");
+  }
+  else if(KEY_COUNT%3 == 0){
+	  Status_get_and_Powerset_Blue(Get_KeyState_Blue());
+	  auto_flag = 0;
+	  //printf("Blue\r\n");
+  }
+  return KEY_COUNT;
+}
+
+#define REF_VOLTAGE     1224UL        // 基准电压千倍
+#define VOLTAGE         3.3        // 电压千倍
+#define ADC_DIP(X)      (X)           // ADC分辨率
+
+#define MAX_Voltage  54.2
+#define MIN_Voltage  40.0
+
+uint8_t adc_collect(void){
+	float Voltage_value;
+	int ADC_value = 0;
+	HAL_ADC_Start(&hadc3);
+    HAL_ADC_PollForConversion(&hadc3, 100);
+    if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc3), HAL_ADC_STATE_REG_EOC))
+    {
+		 ADC_value = HAL_ADC_GetValue(&hadc3);
+		 Voltage_value = (((ADC_value*VOLTAGE)/4096)*600/20) + 1.1;
+		 board_config.Battery.MasterVoltage = Voltage_value;
+		 if(Voltage_value < 40){
+			 board_config.Net_4g.ReserveInt1 = 1;
+		 }
+		 else{
+			 board_config.Net_4g.ReserveInt1 = ((Voltage_value - 40)/(MAX_Voltage-MIN_Voltage))*100;
+		 }
+
+#if PRINTF
+		 printf("adc_v: %d   V:%f  \r\n",ADC_value,Voltage_value);
+#endif
+    }
+	return 1;
+}
+
+uint16_t gps_collect(void){
+	if (rxu5_data_ready == 1) {
+	  // 处理接收到的数据
+	  gps_decode();
+	  // 清空接收缓冲区
+	  memset(rxu5_buffer, 0, sizeof(rxu5_buffer));
+	  rxu5_data_ready = 0;
+	  // 重新启动DMA接收
+	  HAL_UART_Receive_DMA(&huart5, (uint8_t *)rxu5_buffer, RXU5_BUFFER_SIZE);
+    }
+	return 1;
+}
+
+// 航点结构体
+typedef struct {
+    float longitude;
+    float latitude;
+} Waypoint;
+
+typedef struct {
+	float Min_in;
+	float Max_in;
+	int gps_num;
+}Head_in;
+
+// 航点数组
+#define NUM_WAYPOINTS 6
+Waypoint waypointss[NUM_WAYPOINTS];
+Head_in head_in;
+void gps_decode(void){
+	printf("%s\r\n",rxu5_buffer);
+	if(strstr(rxu5_buffer,"now_gps")!=NULL){
+		float lon,lat,speed;
+		char* token = NULL;
+		token = strstr((char *)rxu5_buffer, "now_gps:");
+		if (token != NULL)
+		{
+			token += strlen("now_gps:"); // 跳过 "now_gps:" 部分
+			lat = strtof(token, &token);
+			if (*token == ',')
+			{
+				++token; // 跳过逗号
+				lon = strtof(token, &token);
+			}
+		}
+		// 找到 speed 字段
+		token = strstr((char *)rxu5_buffer, "speed:");
+		if (token != NULL)
+		{
+			token += strlen("speed:"); // 跳过 "speed:" 部分
+			speed = strtof(token, &token);
+		}
+		sprintf(board_config.gps.lat,"%f",lat);
+		sprintf(board_config.gps.lon,"%f",lon);
+		sprintf(board_config.gps.Speed,"%f",speed);
+		printf("lat:%s , lon:%s  speed:%s\r\n",board_config.gps.lat , board_config.gps.lon , board_config.gps.Speed);
+	}
+	else if(strstr(rxu5_buffer,"Kp")!=NULL && strstr(rxu5_buffer,"Ki")!=NULL && strstr(rxu5_buffer,"Kd")!=NULL && strstr(rxu5_buffer,"Lon2")!=NULL){
+		printf("\r\n");
+		char *token = strtok((char *)rxu5_buffer, ",");
+		while (token != NULL) {
+			if (strstr(token, "Kp=")) {
+				sscanf(token, "Kp=%f", &heading_pid.Kp);
+			} else if (strstr(token, "Ki=")) {
+				sscanf(token, "Ki=%f", &heading_pid.Ki);
+			} else if (strstr(token, "Kd=")) {
+				sscanf(token, "Kd=%f", &heading_pid.Kd);
+			}else if (strstr(token, "Min=")) {
+				sscanf(token, "Min=%f", &head_in.Min_in);
+			}else if (strstr(token, "Max=")) {
+				sscanf(token, "Max=%f", &head_in.Max_in);
+			}else if (strstr(token, "Num=")) {
+				sscanf(token, "Num=%d", &head_in.gps_num);
+			}else if (strstr(token, "Lon")) {
+				int index;
+				float value;
+				if (sscanf(token, "Lon%d=%f", &index, &value) == 2 && index > 0 && index <= NUM_WAYPOINTS) {
+					waypointss[index - 1].longitude = value;
+				}
+			} else if (strstr(token, "Lat")) {
+				int index;
+				float value;
+				if (sscanf(token, "Lat%d=%f", &index, &value) == 2 && index > 0 && index <= NUM_WAYPOINTS) {
+					waypointss[index - 1].latitude = value;
+				}
+			}
+			token = strtok(NULL, ",");
+		}
+		Auto_Start_Flag = AUTO_START;
+		PID_Init(&heading_pid, heading_pid.Kp, heading_pid.Ki, heading_pid.Kd, 0.0f, head_in.Min_in, head_in.Max_in);
+		board_config.gps.gps_num = head_in.gps_num;
+		printf("P:%f I:%f D:%f Min:%f Max:%f Num:%d\r\n",heading_pid.Kp, heading_pid.Ki, heading_pid.Kd,head_in.Min_in, head_in.Max_in,board_config.gps.gps_num);
+		for(int i = 0 ; i < 6 ; i++){
+			sprintf(board_config.gps.Target_gpslat[i],"%f",waypointss[i].latitude);
+			sprintf(board_config.gps.Target_gpslon[i],"%f",waypointss[i].longitude);
+			printf("lat:%f   lon:%f\r\n",atof(board_config.gps.Target_gpslat[i]),atof(board_config.gps.Target_gpslon[i]));
+		}
+		printf("\r\n");
+	}
+	else if(strstr(rxu5_buffer,"Pitch")!=NULL){
+		sscanf(rxu5_buffer, "Pitch=%f", &board_config.Imu_data.Pitch);
+		//printf("pitch:%f\r\n",board_config.Imu_data.Pitch);
+	}
+	return ;
+}
+
+uint16_t Inertial_Navigation_Collect(void){
+	HAL_UART_Receive_DMA(&huart3,imu_buf,sizeof(imu_buf));
+//	printf("\r\n");
+//	printf("%02x",imu_buf[0]);
+//	for(int i = 1 ; i < sizeof(imu_buf) ; i++){
+//		printf(" %02x",imu_buf[i]);
+//	}
+//	printf("\r\n");
+	for(int i = 0 ; i < (sizeof(imu_buf) - 30) ; i++){
+		if(imu_buf[i] == 0xBD && imu_buf[i+1] == 0xDB && imu_buf[i+2] == 0x0B){
+			printf("\r\n");
+			for(int j = i ; j < i+30 ; j++){
+				printf(" %02x",imu_buf[j]);
+			}
+			printf("\r\n");
+			if(imu_buf[i] == 0x00){
+				return 1;
+			}
+		    // 解析航向角
+		    int16_t heading = bytesToShort(imu_buf[i+8], imu_buf[i+7] << 8);
+		    double headicng_angle = (heading * 360.0) / 32768.0;
+
+		    // 纬度
+			int32_t latitude = bytesToLong(imu_buf[i+26], imu_buf[i+25], imu_buf[i+24], imu_buf[i+23]);
+			double latitude_deg = (double)latitude * 1.0e-7;
+
+			// 经度
+			int32_t longitude = bytesToLong(imu_buf[i+30], imu_buf[i+29], imu_buf[i+28], imu_buf[i+27]);
+			double longitude_deg = (double)longitude * 1.0e-7;
+
+
+			printf("\r\n");
+
+			printf("heading_deg:%.7f latitude_deg:%.7f longitude_deg:%.7f\r\n",headicng_angle,latitude_deg,longitude_deg);
+
+			printf("\r\n");
+
+			if(latitude_deg < 20.0){
+				return 1;
+			}
+			else if(latitude_deg > 25){
+				return 1;
+			}
+			if(longitude_deg < 110.0){
+				return 1;
+
+			}
+			else if(longitude_deg > 120){
+				printf("4\r\n");
+				return 1;
+
+			}
+
+			board_config.Imu_data.Pitch = headicng_angle;
+			board_config.gps.lat_deg = latitude_deg;
+			board_config.gps.lon_deg = longitude_deg;
+
+			return 1;
+		}
+	}
+	return 1;
+}
+
+
+// 将两个字节转换为有符号短整型
+int16_t bytesToShort(uint8_t highByte, uint8_t lowByte) {
+    int16_t value = (highByte << 8) | lowByte;
+    return value;
+}
+
+// 将四个字节转换为有符号长整型
+int32_t bytesToLong(uint8_t byte3, uint8_t byte2, uint8_t byte1, uint8_t byte0) {
+    int32_t value = (byte3 << 24) | (byte2 << 16) | (byte1 << 8) | byte0;
+    return value;
+}
+
+
+
+
+

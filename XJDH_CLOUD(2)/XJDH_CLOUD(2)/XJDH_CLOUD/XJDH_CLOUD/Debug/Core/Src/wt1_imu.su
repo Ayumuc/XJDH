@@ -1,0 +1,2 @@
+../Core/Src/wt1_imu.c:9:5:imu_collect	8	static
+../Core/Src/wt1_imu.c:22:5:imu_decode	24	static

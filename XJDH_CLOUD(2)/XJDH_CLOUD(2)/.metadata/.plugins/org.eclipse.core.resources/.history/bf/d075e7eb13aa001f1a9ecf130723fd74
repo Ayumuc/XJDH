@@ -1,0 +1,30 @@
+/*
+ * City.h
+ *
+ *  Created on: Jun 24, 2024
+ *      Author: Administrator
+ */
+
+#ifndef SRC_CITY_H_
+#define SRC_CITY_H_
+
+#include "main.h"
+#include "board_config.h"
+
+// 假设ADC的最大值为4095（12位ADC）
+#define ADC_MAX_VALUE 4095
+#define ADC_REFERENCE_VOLTAGE 3.3  // ADC的参考电压
+#define TARGET_VOLTAGE 2.5         // 目标电压标准
+
+typedef struct{
+	float city_vol;
+	uint16_t city_chargecurr;
+}CityParam;
+
+extern CityParam Cityparam;
+
+float ReadADC1_IN11(void);
+float ConvertToTargetVoltage(float actual_voltage);
+float ConvertToVoltage(uint16_t adc_value);
+
+#endif /* SRC_CITY_H_ */

@@ -1,0 +1,54 @@
+#include "City.h"
+#include "adc.h"
+#include "board_config.h"
+
+
+/**
+ * @brief  读取ADC值并转换为电压
+ * @param  adc_value: 从ADC读取的原始值
+ * @return 转换后的电压值 (单位: V)
+ */
+float ConvertToVoltage(uint16_t adc_value) {
+    float voltage = (adc_value * ADC_REFERENCE_VOLTAGE) / ADC_MAX_VALUE;
+    return voltage;
+}
+
+/**
+ * @brief  将实际电压值转换为2.5V标准下的电压值
+ * @param  actual_voltage: 实际电压值 (单位: V)
+ * @return 2.5V标准下的电压值 (单位: V)
+ */
+float ConvertToTargetVoltage(float actual_voltage) {
+    return (actual_voltage * TARGET_VOLTAGE) / ADC_REFERENCE_VOLTAGE;
+}
+
+/**
+ * @brief  读取ADC1通道11的电压值
+ * @return 2.5V标准下的电压值 (单位: V)
+ */
+float ReadADC1_IN11(void) {
+	int ADC_value = 0;
+	    float Voltage_value;
+
+	    // 启动 ADC 转换
+
+	    HAL_ADC_Start(&hadc2);
+			// 错误处理
+		// 等待转换完成
+		HAL_ADC_PollForConversion(&hadc2, 100);
+
+
+		// 检查转换是否完成
+		if (HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc2), HAL_ADC_STATE_REG_EOC)) {
+			ADC_value = HAL_ADC_GetValue(&hadc2);
+			printf("      adc2:%d\r\n", ADC_value);
+
+			// 将 ADC 值转换为电压值
+		    Voltage_value = (float)(ADC_value * 3.3f) / 4095.0f; // 12 位 ADC，最大值为 4095
+		    Cityparam.city_vol = Voltage_value*2;
+		    Cityparam.city_chargecurr = (Voltage_value / 20) / 0.001;
+		    printf("  Vol:%f  Curr:%f \r\n",Cityparam.city_vol,Cityparam.city_chargecurr);
+		}
+
+	    return Voltage_value;
+}

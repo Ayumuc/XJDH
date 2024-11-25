@@ -1,0 +1,35 @@
+/*
+ * Data_Collect.h
+ *
+ *  Created on: Jun 27, 2024
+ *      Author: Administrator
+ */
+
+#ifndef INC_DATA_COLLECT_H_
+#define INC_DATA_COLLECT_H_
+
+#include "main.h"
+
+int Data_Collect(void);
+uint8_t adc_collect(void);
+int Key_Switch(void);
+uint16_t gps_collect(void);
+void gps_decode(void);
+uint16_t Inertial_Navigation_Collect(void);
+int16_t bytesToShort(uint8_t highByte, uint8_t lowByte);
+
+#define RXU5_BUFFER_SIZE 256
+extern uint8_t rxu5_buffer[RXU5_BUFFER_SIZE];
+extern uint16_t rxu5_head, rxu5_tail;
+extern uint8_t rxu5_data_ready;
+extern uint8_t Auto_Start_Flag;
+
+#define KEY_AUTO 1
+#define KEY_ROCKER 2
+#define KEY_BLUE 3
+#define KEY_NET 4
+#define AUTO_START 1
+
+
+
+#endif /* INC_DATA_COLLECT_H_ */

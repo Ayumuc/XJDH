@@ -1,0 +1,12 @@
+../Core/Src/Air820.c:33:5:Air820_init	22
+../Core/Src/Air820.c:81:5:Mode_mqtt	13
+../Core/Src/Air820.c:165:5:Mode_http	14
+../Core/Src/Air820.c:190:5:Air820_uart_send	7
+../Core/Src/Air820.c:216:9:Air_820ug_rxdecode	2
+../Core/Src/Air820.c:230:5:Data_Update	1
+../Core/Src/Air820.c:279:6:board_init	1
+../Core/Src/Air820.c:304:7:extract_json_data	4
+../Core/Src/Air820.c:323:6:parse_json_and_update	5
+../Core/Src/Air820.c:346:6:parse_cmd_args	12
+../Core/Src/Air820.c:380:6:print_pid_and_waypoints	2
+../Core/Src/Air820.c:399:6:decode_4G	12

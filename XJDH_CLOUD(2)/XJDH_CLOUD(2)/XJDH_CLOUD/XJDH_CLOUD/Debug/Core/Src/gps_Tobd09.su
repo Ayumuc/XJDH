@@ -1,0 +1,9 @@
+../Core/Src/gps_Tobd09.c:19:5:out_of_china	24	static
+../Core/Src/gps_Tobd09.c:30:8:transform_latitude	48	static
+../Core/Src/gps_Tobd09.c:38:8:transform_longitude	48	static
+../Core/Src/gps_Tobd09.c:53:6:wgs84_to_gcj02	96	static
+../Core/Src/gps_Tobd09.c:78:6:gcj02_to_wgs84	112	static
+../Core/Src/gps_Tobd09.c:105:6:gcj02_to_bd09	72	static
+../Core/Src/gps_Tobd09.c:120:6:bd09_to_gcj02	72	static
+../Core/Src/gps_Tobd09.c:136:6:wgs84_to_bd09	48	static
+../Core/Src/gps_Tobd09.c:149:6:bd09_to_wgs84	48	static

@@ -1,0 +1,10 @@
+../Core/Src/motor_contorl.c:38:7:Servo_Control	30
+../Core/Src/motor_contorl.c:150:6:Servo_Control_Blue	30
+../Core/Src/motor_contorl.c:270:7:Servo_Control_CAN	64
+../Core/Src/motor_contorl.c:480:8:cmu_k	2
+../Core/Src/motor_contorl.c:487:10:Auto_Sail	7
+../Core/Src/motor_contorl.c:520:9:get_distance	1
+../Core/Src/motor_contorl.c:533:8:get_angle	18
+../Core/Src/motor_contorl.c:554:6:motor_contorl	4
+../Core/Src/motor_contorl.c:569:6:flag_get	8
+../Core/Src/motor_contorl.c:590:7:Servo_Control_New	1

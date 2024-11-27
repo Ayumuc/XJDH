@@ -1,318 +1,84 @@
-17:57:37 **** Incremental Build of configuration Debug for project XJDH_CLOUD ****
+15:40:30 **** Incremental Build of configuration Debug for project XJDH_CLOUD ****
 make -j16 all 
-arm-none-eabi-gcc "../Core/Src/Data_Collect.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F405xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/Data_Collect.d" -MT"Core/Src/Data_Collect.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/Data_Collect.o"
-../Core/Src/Data_Collect.c: In function 'Key_Switch':
-../Core/Src/Data_Collect.c:67:11: warning: implicit declaration of function 'Status_get_and_Powerset' [-Wimplicit-function-declaration]
-   67 |           Status_get_and_Powerset(Get_KeyState());
-      |           ^~~~~~~~~~~~~~~~~~~~~~~
-../Core/Src/Data_Collect.c:67:35: warning: implicit declaration of function 'Get_KeyState' [-Wimplicit-function-declaration]
-   67 |           Status_get_and_Powerset(Get_KeyState());
-      |                                   ^~~~~~~~~~~~
-../Core/Src/Data_Collect.c:72:11: warning: implicit declaration of function 'Status_get_and_Powerset_Blue' [-Wimplicit-function-declaration]
-   72 |           Status_get_and_Powerset_Blue(Get_KeyState_Blue());
-      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../Core/Src/Data_Collect.c:72:40: warning: implicit declaration of function 'Get_KeyState_Blue' [-Wimplicit-function-declaration]
-   72 |           Status_get_and_Powerset_Blue(Get_KeyState_Blue());
-      |                                        ^~~~~~~~~~~~~~~~~
-../Core/Src/Data_Collect.c: In function 'gps_collect':
-../Core/Src/Data_Collect.c:115:11: warning: implicit declaration of function 'memset' [-Wimplicit-function-declaration]
-  115 |           memset(rxu4_buffer, 0, sizeof(rxu4_buffer));
-      |           ^~~~~~
-../Core/Src/Data_Collect.c:21:1: note: include '<string.h>' or provide a declaration of 'memset'
-   20 | #include "cJSON.h"
+arm-none-eabi-gcc "../Core/Src/pid.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F405xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/pid.d" -MT"Core/Src/pid.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/pid.o"
+../Core/Src/pid.c: In function 'PID_Motor_Contorl':
+../Core/Src/pid.c:213:25: warning: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
+  213 |                         printf("current_heading:%f  target_bearing:%f  heading_error:%f\r\n",current_heading,target_bearing,heading_error);
+      |                         ^~~~~~
+../Core/Src/pid.c:9:1: note: include '<stdio.h>' or provide a declaration of 'printf'
+    8 | #include "Data_Collect.h"
+  +++ |+#include <stdio.h>
+    9 | 
+../Core/Src/pid.c:213:25: warning: incompatible implicit declaration of built-in function 'printf' [-Wbuiltin-declaration-mismatch]
+  213 |                         printf("current_heading:%f  target_bearing:%f  heading_error:%f\r\n",current_heading,target_bearing,heading_error);
+      |                         ^~~~~~
+../Core/Src/pid.c:213:25: note: include '<stdio.h>' or provide a declaration of 'printf'
+../Core/Src/pid.c:126:15: warning: unused variable 'speed_correction' [-Wunused-variable]
+  126 |         float speed_correction = 0.0; // 速度校正�?
+      |               ^~~~~~~~~~~~~~~~
+../Core/Src/pid.c:125:15: warning: unused variable 'speed_error' [-Wunused-variable]
+  125 |         float speed_error = 0.0; // 速度误差
+      |               ^~~~~~~~~~~
+../Core/Src/pid.c:124:15: warning: unused variable 'current_speed' [-Wunused-variable]
+  124 |         float current_speed = 0.0; // 当前速度
+      |               ^~~~~~~~~~~~~
+../Core/Src/pid.c:123:15: warning: unused variable 'target_speed' [-Wunused-variable]
+  123 |         float target_speed = 0.0; // 目标速度
+      |               ^~~~~~~~~~~~
+../Core/Src/pid.c:122:13: warning: unused variable 'return_flag' [-Wunused-variable]
+  122 |         int return_flag = 0;
+      |             ^~~~~~~~~~~
+../Core/Src/pid.c:121:15: warning: unused variable 'return_heading' [-Wunused-variable]
+  121 |         float return_heading = 0.0;
+      |               ^~~~~~~~~~~~~~
+../Core/Src/pid.c:109:15: warning: unused variable 'current_heading_before' [-Wunused-variable]
+  109 |         float current_heading_before = 0.0;
+      |               ^~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/pid.c: In function 'Update_Data':
+../Core/Src/pid.c:253:9: warning: implicit declaration of function 'sprintf' [-Wimplicit-function-declaration]
+  253 |         sprintf(jsonMessage,"{\"now_lon\":\"%f\",\"now_lat\":\"%f\",\"target_lon\":\"%f\",\"target_lat\":\"%f\",\"speed\":\"%s\",\"yaw\":\"%f\",\"left_pwm\":\"%f\",\"right_pwm\":\"%f\",\"distantce\":\"%f\",\"error\":\"%f\",\"target\":\"%f\"}\r\n",\
+      |         ^~~~~~~
+../Core/Src/pid.c:253:9: note: include '<stdio.h>' or provide a declaration of 'sprintf'
+../Core/Src/pid.c:253:9: warning: incompatible implicit declaration of built-in function 'sprintf' [-Wbuiltin-declaration-mismatch]
+../Core/Src/pid.c:253:9: note: include '<stdio.h>' or provide a declaration of 'sprintf'
+../Core/Src/pid.c:255:47: warning: implicit declaration of function 'strlen' [-Wimplicit-function-declaration]
+  255 |         HAL_UART_Transmit(&huart2,jsonMessage,strlen(jsonMessage),0xff);
+      |                                               ^~~~~~
+../Core/Src/pid.c:9:1: note: include '<string.h>' or provide a declaration of 'strlen'
+    8 | #include "Data_Collect.h"
   +++ |+#include <string.h>
-   21 | 
-../Core/Src/Data_Collect.c:115:11: warning: incompatible implicit declaration of built-in function 'memset' [-Wbuiltin-declaration-mismatch]
-  115 |           memset(rxu4_buffer, 0, sizeof(rxu4_buffer));
-      |           ^~~~~~
-../Core/Src/Data_Collect.c:115:11: note: include '<string.h>' or provide a declaration of 'memset'
-../Core/Src/Data_Collect.c: In function 'gps_decode':
-../Core/Src/Data_Collect.c:141:12: warning: implicit declaration of function 'strstr' [-Wimplicit-function-declaration]
-  141 |         if(strstr(rxu4_buffer,"Kp")!=NULL && strstr(rxu4_buffer,"Ki")!=NULL && strstr(rxu4_buffer,"Kd")!=NULL && strstr(rxu4_buffer,"Lon1")!=NULL){
-      |            ^~~~~~
-../Core/Src/Data_Collect.c:141:12: note: include '<string.h>' or provide a declaration of 'strstr'
-../Core/Src/Data_Collect.c:141:12: warning: incompatible implicit declaration of built-in function 'strstr' [-Wbuiltin-declaration-mismatch]
-../Core/Src/Data_Collect.c:141:12: note: include '<string.h>' or provide a declaration of 'strstr'
-../Core/Src/Data_Collect.c:141:19: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  141 |         if(strstr(rxu4_buffer,"Kp")!=NULL && strstr(rxu4_buffer,"Ki")!=NULL && strstr(rxu4_buffer,"Kd")!=NULL && strstr(rxu4_buffer,"Lon1")!=NULL){
-      |                   ^~~~~~~~~~~
-      |                   |
-      |                   uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:141:19: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:141:53: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  141 |         if(strstr(rxu4_buffer,"Kp")!=NULL && strstr(rxu4_buffer,"Ki")!=NULL && strstr(rxu4_buffer,"Kd")!=NULL && strstr(rxu4_buffer,"Lon1")!=NULL){
-      |                                                     ^~~~~~~~~~~
-      |                                                     |
-      |                                                     uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:141:53: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:141:87: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  141 |         if(strstr(rxu4_buffer,"Kp")!=NULL && strstr(rxu4_buffer,"Ki")!=NULL && strstr(rxu4_buffer,"Kd")!=NULL && strstr(rxu4_buffer,"Lon1")!=NULL){
-      |                                                                                       ^~~~~~~~~~~
-      |                                                                                       |
-      |                                                                                       uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:141:87: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:141:121: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  141 |         if(strstr(rxu4_buffer,"Kp")!=NULL && strstr(rxu4_buffer,"Ki")!=NULL && strstr(rxu4_buffer,"Kd")!=NULL && strstr(rxu4_buffer,"Lon1")!=NULL){
-      |                                                                                                                         ^~~~~~~~~~~
-      |                                                                                                                         |
-      |                                                                                                                         uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:141:121: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:143:31: warning: implicit declaration of function 'strtok'; did you mean 'strtol'? [-Wimplicit-function-declaration]
-  143 |                 char *token = strtok((char *)rxu4_buffer, ",");
-      |                               ^~~~~~
-      |                               strtol
-../Core/Src/Data_Collect.c:143:31: warning: initialization of 'char *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-../Core/Src/Data_Collect.c:170:31: warning: assignment to 'char *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-  170 |                         token = strtok(NULL, ",");
-      |                               ^
-../Core/Src/Data_Collect.c:177:63: warning: pointer targets in passing argument 1 of 'sprintf' differ in signedness [-Wpointer-sign]
-  177 |                         sprintf(board_config.gps.Target_gpslat[i],"%f",waypointss[i].latitude);
-      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                               |
-      |                                                               uint8_t * {aka unsigned char *}
-In file included from ../Core/Inc/can1.h:5,
-                 from ../Core/Src/Data_Collect.c:11:
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdio.h:250:18: note: expected 'char * restrict' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  250 | int     sprintf (char *__restrict, const char *__restrict, ...)
-      |                  ^
-../Core/Src/Data_Collect.c:178:63: warning: pointer targets in passing argument 1 of 'sprintf' differ in signedness [-Wpointer-sign]
-  178 |                         sprintf(board_config.gps.Target_gpslon[i],"%f",waypointss[i].longitude);
-      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                               |
-      |                                                               uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdio.h:250:18: note: expected 'char * restrict' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  250 | int     sprintf (char *__restrict, const char *__restrict, ...)
-      |                  ^
-../Core/Src/Data_Collect.c:179:89: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  179 |                         printf("lat:%f   lon:%f\r\n",atof(board_config.gps.Target_gpslat[i]),atof(board_config.gps.Target_gpslon[i]));
-      |                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                         |
-      |                                                                                         uint8_t * {aka unsigned char *}
-In file included from ../Core/Inc/main.h:35,
-                 from ../Core/Inc/Data_Collect.h:11,
-                 from ../Core/Src/Data_Collect.c:8:
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:179:129: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  179 |                         printf("lat:%f   lon:%f\r\n",atof(board_config.gps.Target_gpslat[i]),atof(board_config.gps.Target_gpslon[i]));
-      |                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                 |
-      |                                                                                                                                 uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:184:68: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  184 |                                 atof(board_config.gps.Target_gpslat[0]),atof(board_config.gps.Target_gpslon[0]),atof(board_config.gps.Target_gpslat[1]),atof(board_config.gps.Target_gpslon[1]),atof(board_config.gps.Target_gpslat[2]),atof(board_config.gps.Target_gpslat[2]),\
-      |                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                    |
-      |                                                                    uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:184:108: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  184 |                                 atof(board_config.gps.Target_gpslat[0]),atof(board_config.gps.Target_gpslon[0]),atof(board_config.gps.Target_gpslat[1]),atof(board_config.gps.Target_gpslon[1]),atof(board_config.gps.Target_gpslat[2]),atof(board_config.gps.Target_gpslat[2]),\
-      |                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                            |
-      |                                                                                                            uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:184:148: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  184 |                                 atof(board_config.gps.Target_gpslat[0]),atof(board_config.gps.Target_gpslon[0]),atof(board_config.gps.Target_gpslat[1]),atof(board_config.gps.Target_gpslon[1]),atof(board_config.gps.Target_gpslat[2]),atof(board_config.gps.Target_gpslat[2]),\
-      |                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                    |
-      |                                                                                                                                                    uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:184:188: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  184 |                                 atof(board_config.gps.Target_gpslat[0]),atof(board_config.gps.Target_gpslon[0]),atof(board_config.gps.Target_gpslat[1]),atof(board_config.gps.Target_gpslon[1]),atof(board_config.gps.Target_gpslat[2]),atof(board_config.gps.Target_gpslat[2]),\
-      |                                                                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                                                            |
-      |                                                                                                                                                                                            uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:184:228: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  184 |                                 atof(board_config.gps.Target_gpslat[0]),atof(board_config.gps.Target_gpslon[0]),atof(board_config.gps.Target_gpslat[1]),atof(board_config.gps.Target_gpslon[1]),atof(board_config.gps.Target_gpslat[2]),atof(board_config.gps.Target_gpslat[2]),\
-      |                                                                                                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                                                                                                    |
-      |                                                                                                                                                                                                                                    uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:184:268: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  184 |                                 atof(board_config.gps.Target_gpslat[0]),atof(board_config.gps.Target_gpslon[0]),atof(board_config.gps.Target_gpslat[1]),atof(board_config.gps.Target_gpslon[1]),atof(board_config.gps.Target_gpslat[2]),atof(board_config.gps.Target_gpslat[2]),\
-      |                                                                                                                                                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                                                                                                                                            |
-      |                                                                                                                                                                                                                                                                            uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:185:68: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  185 |                                 atof(board_config.gps.Target_gpslat[3]),atof(board_config.gps.Target_gpslon[3]),atof(board_config.gps.Target_gpslat[4]),atof(board_config.gps.Target_gpslon[4]),atof(board_config.gps.Target_gpslat[5]),atof(board_config.gps.Target_gpslon[5]));
-      |                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                    |
-      |                                                                    uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:185:108: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  185 |                                 atof(board_config.gps.Target_gpslat[3]),atof(board_config.gps.Target_gpslon[3]),atof(board_config.gps.Target_gpslat[4]),atof(board_config.gps.Target_gpslon[4]),atof(board_config.gps.Target_gpslat[5]),atof(board_config.gps.Target_gpslon[5]));
-      |                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                            |
-      |                                                                                                            uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:185:148: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  185 |                                 atof(board_config.gps.Target_gpslat[3]),atof(board_config.gps.Target_gpslon[3]),atof(board_config.gps.Target_gpslat[4]),atof(board_config.gps.Target_gpslon[4]),atof(board_config.gps.Target_gpslat[5]),atof(board_config.gps.Target_gpslon[5]));
-      |                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                    |
-      |                                                                                                                                                    uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:185:188: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  185 |                                 atof(board_config.gps.Target_gpslat[3]),atof(board_config.gps.Target_gpslon[3]),atof(board_config.gps.Target_gpslat[4]),atof(board_config.gps.Target_gpslon[4]),atof(board_config.gps.Target_gpslat[5]),atof(board_config.gps.Target_gpslon[5]));
-      |                                                                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                                                            |
-      |                                                                                                                                                                                            uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:185:228: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  185 |                                 atof(board_config.gps.Target_gpslat[3]),atof(board_config.gps.Target_gpslon[3]),atof(board_config.gps.Target_gpslat[4]),atof(board_config.gps.Target_gpslon[4]),atof(board_config.gps.Target_gpslat[5]),atof(board_config.gps.Target_gpslon[5]));
-      |                                                                                                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                                                                                                    |
-      |                                                                                                                                                                                                                                    uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:185:268: warning: pointer targets in passing argument 1 of 'atof' differ in signedness [-Wpointer-sign]
-  185 |                                 atof(board_config.gps.Target_gpslat[3]),atof(board_config.gps.Target_gpslon[3]),atof(board_config.gps.Target_gpslat[4]),atof(board_config.gps.Target_gpslon[4]),atof(board_config.gps.Target_gpslat[5]),atof(board_config.gps.Target_gpslon[5]));
-      |                                                                                                                                                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-      |                                                                                                                                                                                                                                                                            |
-      |                                                                                                                                                                                                                                                                            uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdlib.h:77:27: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   77 | double  atof (const char *__nptr);
-      |               ~~~~~~~~~~~~^~~~~~
-../Core/Src/Data_Collect.c:183:25: warning: pointer targets in passing argument 1 of 'sprintf' differ in signedness [-Wpointer-sign]
-  183 |                 sprintf(Laser_Buf,"{\"Goal1\":[{\"Lat\":%f,\"Lng\":%f}],\"Goal2\":[{\"Lat\":%f,\"Lng\":%f}],\"Goal3\":[{\"Lat\":%f,\"Lng\":%f}],\"Goal4\":[{\"Lat\":%f,\"Lng\":%f}],\"Goal5\":[{\"Lat\":%f,\"Lng\":%f}],\"Goal6\":[{\"Lat\":%f,\"Lng\":%f}]}",\
-      |                         ^~~~~~~~~
-      |                         |
-      |                         uint8_t * {aka unsigned char *}
-D:\soft\STM32CubeIDE_1.15.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.100.202403111256\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/stdio.h:250:18: note: expected 'char * restrict' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  250 | int     sprintf (char *__restrict, const char *__restrict, ...)
-      |                  ^
-../Core/Src/Data_Collect.c:186:53: warning: implicit declaration of function 'strlen' [-Wimplicit-function-declaration]
-  186 |                 HAL_UART_Transmit(&huart2,Laser_Buf,strlen(Laser_Buf),0xff);
-      |                                                     ^~~~~~
-../Core/Src/Data_Collect.c:186:53: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/Data_Collect.c:186:53: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-../Core/Src/Data_Collect.c:186:53: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/Data_Collect.c:186:60: warning: pointer targets in passing argument 1 of 'strlen' differ in signedness [-Wpointer-sign]
-  186 |                 HAL_UART_Transmit(&huart2,Laser_Buf,strlen(Laser_Buf),0xff);
-      |                                                            ^~~~~~~~~
-      |                                                            |
-      |                                                            uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:186:60: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:188:24: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  188 |         else if(strstr(rxu4_buffer,"Pitch")!=NULL && strstr(rxu4_buffer,"Gps_Lat")!=NULL && strstr(rxu4_buffer,"Gps_Lon")!=NULL){
-      |                        ^~~~~~~~~~~
-      |                        |
-      |                        uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:188:24: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:188:61: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  188 |         else if(strstr(rxu4_buffer,"Pitch")!=NULL && strstr(rxu4_buffer,"Gps_Lat")!=NULL && strstr(rxu4_buffer,"Gps_Lon")!=NULL){
-      |                                                             ^~~~~~~~~~~
-      |                                                             |
-      |                                                             uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:188:61: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:188:100: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  188 |         else if(strstr(rxu4_buffer,"Pitch")!=NULL && strstr(rxu4_buffer,"Gps_Lat")!=NULL && strstr(rxu4_buffer,"Gps_Lon")!=NULL){
-      |                                                                                                    ^~~~~~~~~~~
-      |                                                                                                    |
-      |                                                                                                    uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:188:100: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:190:41: warning: pointer targets in passing argument 1 of 'parse_position_data' differ in signedness [-Wpointer-sign]
-  190 |                 if (parse_position_data(rxu4_buffer, &data) == 0) {
-      |                                         ^~~~~~~~~~~
-      |                                         |
-      |                                         uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:28:37: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   28 | int parse_position_data(const char *input, PositionData *data);
-      |                         ~~~~~~~~~~~~^~~~~
-../Core/Src/Data_Collect.c:202:24: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  202 |         else if(strstr(rxu4_buffer,"AutomaticReturn_Start")!=NULL){
-      |                        ^~~~~~~~~~~
-      |                        |
-      |                        uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:202:24: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c:205:24: warning: pointer targets in passing argument 1 of 'strstr' differ in signedness [-Wpointer-sign]
-  205 |         else if(strstr(rxu4_buffer,"Stop_Auto")!=NULL){
-      |                        ^~~~~~~~~~~
-      |                        |
-      |                        uint8_t * {aka unsigned char *}
-../Core/Src/Data_Collect.c:205:24: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-../Core/Src/Data_Collect.c: In function 'Inertial_Navigation_Collect':
-../Core/Src/Data_Collect.c:297:72: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  297 |                                 HAL_UART_Transmit(&huart4,PitchMessage,strlen(PitchMessage),0xff);
-      |                                                                        ^~~~~~
-../Core/Src/Data_Collect.c:297:72: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/Data_Collect.c:297:59: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
-  297 |                                 HAL_UART_Transmit(&huart4,PitchMessage,strlen(PitchMessage),0xff);
-      |                                                           ^~~~~~~~~~~~
-      |                                                           |
-      |                                                           char *
+    9 | 
+../Core/Src/pid.c:255:47: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
+  255 |         HAL_UART_Transmit(&huart2,jsonMessage,strlen(jsonMessage),0xff);
+      |                                               ^~~~~~
+../Core/Src/pid.c:255:47: note: include '<string.h>' or provide a declaration of 'strlen'
+../Core/Src/pid.c:255:35: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  255 |         HAL_UART_Transmit(&huart2,jsonMessage,strlen(jsonMessage),0xff);
+      |                                   ^~~~~~~~~~~
+      |                                   |
+      |                                   char *
 In file included from ../Core/Inc/stm32f4xx_hal_conf.h:411,
                  from ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:29,
-                 from ../Core/Inc/main.h:30:
+                 from ../Core/Src/pid.c:1:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:745:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
   745 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
       |                                                                ~~~~~~~~~~~~~~~^~~~~
-../Core/Src/Data_Collect.c: In function 'Laser_Navigation_Collect':
-../Core/Src/Data_Collect.c:312:34: warning: pointer targets in passing argument 1 of 'ParseLaserJSON' differ in signedness [-Wpointer-sign]
-  312 |                   ParseLaserJSON(imu_buf);
-      |                                  ^~~~~~~
-      |                                  |
-      |                                  uint8_t * {aka unsigned char *}
-../Core/Inc/Data_Collect.h:22:33: note: expected 'const char *' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-   22 | void ParseLaserJSON(const char *jsonString);
-      |                     ~~~~~~~~~~~~^~~~~~~~~~
-../Core/Src/Data_Collect.c:314:19: warning: incompatible implicit declaration of built-in function 'memset' [-Wbuiltin-declaration-mismatch]
-  314 |                   memset(imu_buf, 0, sizeof(imu_buf));
-      |                   ^~~~~~
-../Core/Src/Data_Collect.c:314:19: note: include '<string.h>' or provide a declaration of 'memset'
-../Core/Src/Data_Collect.c:318:69: warning: passing argument 3 of 'HAL_UART_Receive_DMA' makes integer from pointer without a cast [-Wint-conversion]
-  318 |                   HAL_UART_Receive_DMA(&huart2, (uint8_t *)imu_buf, imu_buf);
-      |                                                                     ^~~~~~~
-      |                                                                     |
-      |                                                                     uint8_t * {aka unsigned char *}
-../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:750:92: note: expected 'uint16_t' {aka 'short unsigned int'} but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  750 | HAL_StatusTypeDef HAL_UART_Receive_DMA(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
-      |                                                                                   ~~~~~~~~~^~~~
-../Core/Src/Data_Collect.c: In function 'ParseLaserJSON':
-../Core/Src/Data_Collect.c:377:56: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  377 |                 HAL_UART_Transmit(&huart4,PitchMessage,strlen(PitchMessage),0xff);
-      |                                                        ^~~~~~
-../Core/Src/Data_Collect.c:377:56: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/Data_Collect.c:377:43: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
-  377 |                 HAL_UART_Transmit(&huart4,PitchMessage,strlen(PitchMessage),0xff);
-      |                                           ^~~~~~~~~~~~
-      |                                           |
-      |                                           char *
-../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:745:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
-  745 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
-      |                                                                ~~~~~~~~~~~~~~~^~~~~
-arm-none-eabi-gcc -o "XJDH_CLOUD.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\32589\Desktop\11.22\XJDH_CLOUD(2)\XJDH_CLOUD(2)\XJDH_CLOUD\XJDH_CLOUD\STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="XJDH_CLOUD.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+../Core/Src/pid.c:253:239: warning: '"}
+   ' directive writing 4 bytes into a region of size between 0 and 82 [-Wformat-overflow=]
+  253 |         sprintf(jsonMessage,"{\"now_lon\":\"%f\",\"now_lat\":\"%f\",\"target_lon\":\"%f\",\"target_lat\":\"%f\",\"speed\":\"%s\",\"yaw\":\"%f\",\"left_pwm\":\"%f\",\"right_pwm\":\"%f\",\"distantce\":\"%f\",\"error\":\"%f\",\"target\":\"%f\"}\r\n",\
+      |                                                                                                                                                                                                                                               ^~~~~~~
+../Core/Src/pid.c:253:9: note: 'sprintf' output between 179 and 3348 bytes into a destination of size 256
+  253 |         sprintf(jsonMessage,"{\"now_lon\":\"%f\",\"now_lat\":\"%f\",\"target_lon\":\"%f\",\"target_lat\":\"%f\",\"speed\":\"%s\",\"yaw\":\"%f\",\"left_pwm\":\"%f\",\"right_pwm\":\"%f\",\"distantce\":\"%f\",\"error\":\"%f\",\"target\":\"%f\"}\r\n",\
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  254 |                 lon1,lat1,lon2,lat2,board_config.gps.Speed,yaws,left_pwm,right_pwm,dis,error,target);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "XJDH_CLOUD.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\32589\Desktop\11.22\XJDH_CLOUD(2)\XJDH_CLOUD(2)\XJDH_CLOUD(2)\XJDH_CLOUD(2)\XJDH_CLOUD\XJDH_CLOUD\STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="XJDH_CLOUD.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 Finished building target: XJDH_CLOUD.elf
  
 arm-none-eabi-size  XJDH_CLOUD.elf 
 arm-none-eabi-objdump -h -S XJDH_CLOUD.elf  > "XJDH_CLOUD.list"
    text	   data	    bss	    dec	    hex	filename
-  90488	    504	  85744	 176736	  2b260	XJDH_CLOUD.elf
+  90648	    504	  85488	 176640	  2b200	XJDH_CLOUD.elf
 arm-none-eabi-objcopy  -O ihex XJDH_CLOUD.elf  "XJDH_CLOUD.hex"
 Finished building: default.size.stdout
 Finished building: XJDH_CLOUD.list

@@ -1,0 +1,7 @@
+20:44:42 **** Incremental Build of configuration Debug for project XJDH_CLOUD ****
+make -j16 all 
+arm-none-eabi-size  XJDH_CLOUD.elf 
+   text	   data	    bss	    dec	    hex	filename
+  90488	    504	  85744	 176736	  2b260	XJDH_CLOUD.elf
+Finished building: default.size.stdout
+ 
